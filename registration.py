@@ -13,8 +13,7 @@ def get_db_connection():
         database="mark_db"
     )
 
-# --- 2. THE UI SETUP ---
-st.set_page_config(page_title="Student Manager", layout="wide")
+st.set_page_config(page_title="Student Manager 📋", layout="wide")
 
 st.markdown("""
     <style>
@@ -74,7 +73,8 @@ st.markdown("""
         color: black !important;
         text-shadow: none !important;
     }
-    
+
+    /* 4. Fix the Form background so the white text is readable */
     [data-testid="stForm"] {
         background-color: rgba(50, 50, 50, 0.8); /* Semi-transparent dark gray */
         padding: 25px;
@@ -88,10 +88,10 @@ st.markdown("""
 
 st.title("🎓 Student Information Manager")
 
-# Create Tabs
+# Tabs
 tab1, tab2, tab3 = st.tabs(["📝 Add Student", "📊 View Records", "⚙️ Manage"])
 
-# --- TAB 1: ADD STUDENT ---
+#TAB 1
 with tab1:
     st.subheader("Registration Form")
     with st.form("reg_form"):
@@ -115,7 +115,7 @@ with tab1:
             st.success("Successfully Added!")
             conn.close()
 
-# --- TAB 2: VIEW RECORDS ---
+#TAB 2
 with tab2:
     st.subheader("Student List")
     conn = get_db_connection()
@@ -124,17 +124,18 @@ with tab2:
     st.dataframe(df, use_container_width=True)
     conn.close()
 
-# --- TAB 3: SEARCH, UPDATE & DELETE ---
+#TAB 3
 with tab3:
     st.subheader("Manage Records (Update or Delete)")
     
-    # 1. Search for the student first
-    search_id = st.text_input("Enter Student ID to Manage")
+    search_query = st.text_input("Enter Student ID or Full Name to Manage")
     
-    if search_id:
+    if search_query:
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
-        cursor.execute("SELECT * FROM students WHERE student_id = %s", (search_id,))
+        sql = "SELECT * FROM students WHERE student_id = %s OR full_name LIKE %s"
+        name_pogi = f"%{search_query}%"
+        cursor.execute(sql, (search_query, name_pogi))
         student = cursor.fetchone()
         conn.close()
 
