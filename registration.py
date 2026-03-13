@@ -74,8 +74,7 @@ st.markdown("""
         color: black !important;
         text-shadow: none !important;
     }
-
-    /* 4. Fix the Form background so the white text is readable */
+    
     [data-testid="stForm"] {
         background-color: rgba(50, 50, 50, 0.8); /* Semi-transparent dark gray */
         padding: 25px;
@@ -101,6 +100,7 @@ with tab1:
             s_id = st.text_input("Student ID (ex. 18-00035)")
             name = st.text_input("Full Name")
             age = st.number_input("Age", min_value=1, max_value=100)
+            gender = st.selectbox("Gender", ["MALE", "FEMALE"])
         with col2:
             course = st.text_input("Course")
             year = st.selectbox("Year Level", ["1st Year", "2nd Year", "3rd Year", "4th Year"])
@@ -109,8 +109,8 @@ with tab1:
         if st.form_submit_button("Save Record"):
             conn =get_db_connection()
             cursor = conn.cursor()
-            sql = "INSERT INTO students (student_id, full_name, age, course, year_level, email) VALUES (%s, %s, %s, %s, %s, %s)"
-            cursor.execute(sql, (s_id, name, age, course, year, email))
+            sql = "INSERT INTO students (student_id, full_name, age, gender, course, year_level, email) VALUES (%s, %s, %s, %s, %s, %s, %s)"
+            cursor.execute(sql, (s_id, name, age, gender, course, year, email))
             conn.commit()
             st.success("Successfully Added!")
             conn.close()
