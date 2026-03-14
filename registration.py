@@ -1,176 +1,79 @@
 import streamlit as st
-import time
 import mysql.connector
 import pandas as pd
+import time
 
+# --- DATABASE HELPER ---
+def run_query(query, params=None, is_select=False):
+    conn = mysql.connector.connect(host="localhost", user="root", password="", database="mark_db")
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute(query, params or ())
+    result = cursor.fetchall() if is_select else conn.commit()
+    conn.close()
+    return result
 
-# Database Connection Function
-def get_db_connection():
-    return mysql.connector.connect(
-        host="localhost",
-        user="root",
-        password="",
-        database="mark_db"
-    )
-
+# --- UI CONFIG & STYLING ---
 st.set_page_config(page_title="Student Manager 📋", layout="wide")
-
 st.markdown("""
     <style>
-    .stApp {
-        background-image: url("https://images2.alphacoders.com/261/26102.jpg");
-        background-size: cover;
-        background-position: center;
-        height: 1000px; /* Adjust this height as you like */
-        width: 100%;
-        border-radius: 10px;
-        margin-bottom: 20px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border: 2px solid #ddd;
-
-        
-    }
+    .stApp { background: url("https://images2.alphacoders.com/261/26102.jpg") center; background-size: cover; } 
+    [data-testid="stForm"], .stTabs { background: rgba(50, 50, 50, 0.8) center; margin-top: 20px; padding: 20px; border: 1px solid rgba(255, 255, 255, 0.2); color: white; }
+    h3, p { color: white !important; font-weight: bold !important; text-shadow: 2px 2px 4px rgba(0,0,0,0.8) !important; font-size: 1.1rem !important; font-family: Arial !important;} 
+    h1 {color: white !important; font-weight: bold !important; font-family: Monospace !important;}
+    input { color: black !important; }
     </style>
     """, unsafe_allow_html=True)
-
-st.markdown("""
-    <style>
-    [data-testid="stForm"] {
-        background-color: rgba(240, 242, 246, 0.95); /* Light gray with 95% opacity */
-        padding: 30px;
-        border-radius: 15px;
-        border: 1px solid #d1d1d1;
-        box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.2);
-    }
-
-    label p {
-        color: #1f1f1f !important;
-        font-weight: bold !important;
-        font-size: 1.1rem !important;
-    }
-
-    .stTextInput input, .stSelectbox div, .stNumberInput input {
-        background-color: light-grey !important;
-    }
-    </style>
-    """, unsafe_allow_html=True)
-
-st.markdown("""
-    <style>
-    .stApp, .stApp p, .stApp h1, .stApp h2, .stApp h3, .stApp label {
-        color: white !important;
-        text-shadow: 2px 2px 4px rgba(0,0,0,0.8) !important;
-    }
-
-    button[data-testid="stBaseButton-tertiary"] p {
-        color: white !important;
-        font-weight: bold !important;
-    }
-
-    input, select, textarea {
-        color: black !important;
-        text-shadow: none !important;
-    }
-
-    /* 4. Fix the Form background so the white text is readable */
-    [data-testid="stForm"] {
-        background-color: rgba(50, 50, 50, 0.8); /* Semi-transparent dark gray */
-        padding: 25px;
-        border-radius: 15px;
-        border: 1px solid rgba(255, 255, 255, 0.2);
-    }
-    </style>
-    """, unsafe_allow_html=True)
-
-
 
 st.title("🎓 Student Information Manager")
-
-# Tabs
 tab1, tab2, tab3 = st.tabs(["📝 Add Student", "📊 View Records", "⚙️ Manage"])
 
-#TAB 1
+# --- TAB 1: ADD STUDENT ---
 with tab1:
-    st.subheader("Registration Form")
     with st.form("reg_form"):
         col1, col2 = st.columns(2)
-        with col1:
-            s_id = st.text_input("Student ID (ex. 18-00035)")
-            name = st.text_input("Full Name")
-            age = st.number_input("Age", min_value=1, max_value=100)
-            gender = st.selectbox("Gender", ["MALE", "FEMALE"])
-        with col2:
-            course = st.text_input("Course")
-            year = st.selectbox("Year Level", ["1st Year", "2nd Year", "3rd Year", "4th Year"])
-            email = st.text_input("Email")
+        s_id = col1.text_input("Student ID (ex. 18-00035)")
+        name = col1.text_input("Full Name")
+        age = col1.number_input("Age", 1, 100, 18)
+        gender = col1.selectbox("Gender", ["MALE", "FEMALE"])
+        course = col2.text_input("Course")
+        year = col2.selectbox("Year Level", ["1st Year", "2nd Year", "3rd Year", "4th Year"])
+        email = col2.text_input("Email")
         
         if st.form_submit_button("Save Record"):
-            conn =get_db_connection()
-            cursor = conn.cursor()
-            sql = "INSERT INTO students (student_id, full_name, age, gender, course, year_level, email) VALUES (%s, %s, %s, %s, %s, %s, %s)"
-            cursor.execute(sql, (s_id, name, age, gender, course, year, email))
-            conn.commit()
+            sql = "INSERT INTO students VALUES (%s, %s, %s, %s, %s, %s, %s)"
+            run_query(sql, (s_id, name, age, gender, course, year, email))
             st.success("Successfully Added!")
-            conn.close()
 
-#TAB 2
+# --- TAB 2: VIEW RECORDS ---
 with tab2:
-    st.subheader("Student List")
-    conn = get_db_connection()
+    conn = mysql.connector.connect(host="localhost", user="root", password="", database="mark_db")
     df = pd.read_sql("SELECT * FROM students", conn)
     st.dataframe(df, use_container_width=True)
     conn.close()
 
-#TAB 3
+# --- TAB 3: MANAGE (UPDATE/DELETE) ---
 with tab3:
-    st.subheader("Manage Records (Update or Delete)")
-    
-    search_query = st.text_input("Enter Student ID or Full Name to Manage")
-    
-    if search_query:
-        conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
-        sql = "SELECT * FROM students WHERE student_id = %s OR full_name LIKE %s"
-        name_pogi = f"%{search_query}%"
-        cursor.execute(sql, (search_query, name_pogi))
-        student = cursor.fetchone()
-        conn.close()
-
-        if student:
-            st.write("### Edit Information")
-            with st.form("update_form"):
-                new_name = st.text_input("Full Name", value=student['full_name'])
-                new_course = st.text_input("Course", value=student['course'])
-                new_year = st.selectbox("Year Level", 
-                                      ["1st Year", "2nd Year", "3rd Year", "4th Year"],
-                                      index=["1st Year", "2nd Year", "3rd Year", "4th Year"].index(student['year_level']))
+    search = st.text_input("Search Student ID or Name")
+    if search:
+        res = run_query("SELECT * FROM students WHERE student_id = %s OR full_name LIKE %s", (search, f"%{search}%"), True)
+        if res:
+            student = res[0]
+            with st.form("edit_form"):
+                u_name = st.text_input("Full Name", student['full_name'])
+                u_course = st.text_input("Course", student['course'])
+                u_year = st.selectbox("Year", ["1st Year", "2nd Year", "3rd Year", "4th Year"], 
+                                    index=["1st Year", "2nd Year", "3rd Year", "4th Year"].index(student['year_level']))
                 
-                col_update, col_delete = st.columns(2)
+                c1, c2 = st.columns(2)
+                if c1.form_submit_button("Update"):
+                    run_query("UPDATE students SET full_name=%s, course=%s, year_level=%s WHERE student_id=%s", 
+                             (u_name, u_course, u_year, student['student_id']))
+                    st.success("Updated!")
+                    time.sleep(1); st.rerun()
                 
-                # UPDATE BUTTON
-                if col_update.form_submit_button("Update Student Details"):
-                    conn = get_db_connection()
-                    cursor = conn.cursor()
-                    sql = "UPDATE students SET full_name=%s, course=%s, year_level=%s WHERE student_id=%s"
-                    cursor.execute(sql, (new_name, new_course, new_year, search_id))                 
-                    conn.commit()
-                    conn.close()
-                    st.success("Information Updated!")
-                    time.sleep(3)
-                    st.rerun()
-
-                # DELETE BUTTON 
-                if col_delete.form_submit_button("Delete This Student"):
-                    conn = get_db_connection()
-                    cursor = conn.cursor()
-                    # Change search_id to student['student_id']
-                    cursor.execute("DELETE FROM students WHERE student_id = %s", (student['student_id'],))
-                    conn.commit()
-                    conn.close()
-                    st.warning("Student Deleted!")
-                    time.sleep(2)
-                    st.rerun()
+                if c2.form_submit_button("Delete"):
+                    run_query("DELETE FROM students WHERE student_id=%s", (student['student_id'],))
+                    st.warning("Deleted!")
+                    time.sleep(1); st.rerun()
         else:
-            st.error("Student ID not found.")
+            st.error("Not found.")
