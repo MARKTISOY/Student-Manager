@@ -160,14 +160,15 @@ with tab3:
                     conn.commit()
                     conn.close()
                     st.success("Information Updated!")
-                    time.sleep(5)
+                    time.sleep(3)
                     st.rerun()
 
                 # DELETE BUTTON (Inside the same flow)
                 if col_delete.form_submit_button("Delete This Student"):
                     conn = get_db_connection()
                     cursor = conn.cursor()
-                    cursor.execute("DELETE FROM students WHERE student_id = %s", (search_id,))
+                    # Change search_id to student['student_id']
+                    cursor.execute("DELETE FROM students WHERE student_id = %s", (student['student_id'],))
                     conn.commit()
                     conn.close()
                     st.warning("Student Deleted!")
