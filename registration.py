@@ -119,7 +119,6 @@ with tab1:
 with tab2:
     st.subheader("Student List")
     conn = get_db_connection()
-    # Read the database table into a professional-looking table
     df = pd.read_sql("SELECT * FROM students", conn)
     st.dataframe(df, use_container_width=True)
     conn.close()
@@ -141,7 +140,6 @@ with tab3:
 
         if student:
             st.write("### Edit Information")
-            # Create a form pre-filled with existing data
             with st.form("update_form"):
                 new_name = st.text_input("Full Name", value=student['full_name'])
                 new_course = st.text_input("Course", value=student['course'])
@@ -163,7 +161,7 @@ with tab3:
                     time.sleep(3)
                     st.rerun()
 
-                # DELETE BUTTON (Inside the same flow)
+                # DELETE BUTTON 
                 if col_delete.form_submit_button("Delete This Student"):
                     conn = get_db_connection()
                     cursor = conn.cursor()
