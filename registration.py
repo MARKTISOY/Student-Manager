@@ -13,8 +13,7 @@ def get_db_connection():
         database="mark_db"
     )
 
-# --- 2. THE UI SETUP ---
-st.set_page_config(page_title="Student Manager", layout="wide")
+st.set_page_config(page_title="Student Manager 📋", layout="wide")
 
 st.markdown("""
     <style>
@@ -89,10 +88,10 @@ st.markdown("""
 
 st.title("🎓 Student Information Manager")
 
-# Create Tabs
+# Tabs
 tab1, tab2, tab3 = st.tabs(["📝 Add Student", "📊 View Records", "⚙️ Manage"])
 
-# --- TAB 1: ADD STUDENT ---
+#TAB 1
 with tab1:
     st.subheader("Registration Form")
     with st.form("reg_form"):
@@ -101,6 +100,7 @@ with tab1:
             s_id = st.text_input("Student ID (ex. 18-00035)")
             name = st.text_input("Full Name")
             age = st.number_input("Age", min_value=1, max_value=100)
+            gender = st.selectbox("Gender", ["MALE", "FEMALE"])
         with col2:
             course = st.text_input("Course")
             year = st.selectbox("Year Level", ["1st Year", "2nd Year", "3rd Year", "4th Year"])
@@ -109,13 +109,13 @@ with tab1:
         if st.form_submit_button("Save Record"):
             conn =get_db_connection()
             cursor = conn.cursor()
-            sql = "INSERT INTO students (student_id, full_name, age, course, year_level, email) VALUES (%s, %s, %s, %s, %s, %s)"
-            cursor.execute(sql, (s_id, name, age, course, year, email))
+            sql = "INSERT INTO students (student_id, full_name, age, gender, course, year_level, email) VALUES (%s, %s, %s, %s, %s, %s, %s)"
+            cursor.execute(sql, (s_id, name, age, gender, course, year, email))
             conn.commit()
             st.success("Successfully Added!")
             conn.close()
 
-# --- TAB 2: VIEW RECORDS ---
+#TAB 2
 with tab2:
     st.subheader("Student List")
     conn = get_db_connection()
@@ -124,17 +124,18 @@ with tab2:
     st.dataframe(df, use_container_width=True)
     conn.close()
 
-# --- TAB 3: SEARCH, UPDATE & DELETE ---
+#TAB 3
 with tab3:
     st.subheader("Manage Records (Update or Delete)")
     
-    # 1. Search for the student first
-    search_id = st.text_input("Enter Student ID to Manage")
+    search_query = st.text_input("Enter Student ID or Full Name to Manage")
     
-    if search_id:
+    if search_query:
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
-        cursor.execute("SELECT * FROM students WHERE student_id = %s", (search_id,))
+        sql = "SELECT * FROM students WHERE student_id = %s OR full_name LIKE %s"
+        name_pogi = f"%{search_query}%"
+        cursor.execute(sql, (search_query, name_pogi))
         student = cursor.fetchone()
         conn.close()
 
