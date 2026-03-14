@@ -3,7 +3,6 @@ import mysql.connector
 import pandas as pd
 import time
 
-# --- DATABASE HELPER ---
 def run_query(query, params=None, is_select=False):
     conn = mysql.connector.connect(host="localhost", user="root", password="", database="mark_db")
     cursor = conn.cursor(dictionary=True)
@@ -12,7 +11,7 @@ def run_query(query, params=None, is_select=False):
     conn.close()
     return result
 
-# --- UI CONFIG & STYLING ---
+
 st.set_page_config(page_title="Student Manager 📋", layout="wide")
 st.markdown("""
     <style>
@@ -27,7 +26,7 @@ st.markdown("""
 st.title("🎓 Student Information Manager")
 tab1, tab2, tab3 = st.tabs(["📝 Add Student", "📊 View Records", "⚙️ Manage"])
 
-# --- TAB 1: ADD STUDENT ---
+#TAB 1
 with tab1:
     with st.form("reg_form"):
         col1, col2 = st.columns(2)
@@ -44,14 +43,14 @@ with tab1:
             run_query(sql, (s_id, name, age, gender, course, year, email))
             st.success("Successfully Added!")
 
-# --- TAB 2: VIEW RECORDS ---
+#TAB 2
 with tab2:
     conn = mysql.connector.connect(host="localhost", user="root", password="", database="mark_db")
     df = pd.read_sql("SELECT * FROM students", conn)
     st.dataframe(df, use_container_width=True)
     conn.close()
 
-# --- TAB 3: MANAGE (UPDATE/DELETE) ---
+#TAB 3
 with tab3:
     search = st.text_input("Search Student ID or Name")
     if search:
