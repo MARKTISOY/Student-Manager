@@ -19,7 +19,7 @@ st.markdown("""
     [data-testid="stForm"], .stTabs { background: rgba(50, 50, 50, 0.8) center; margin-top: 20px; padding: 20px; border: 1px solid rgba(255, 255, 255, 0.2); color: white; }
     h3, p { color: white !important; font-weight: bold !important; text-shadow: 2px 2px 4px rgba(0,0,0,0.8) !important; font-size: 1.1rem !important; font-family: Arial !important;} 
     h1 {color: white !important; font-weight: bold !important; font-family: Monospace !important;}
-    input { color: black !important; }
+    input { color: white !important; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -33,10 +33,15 @@ with tab1:
         s_id = col1.text_input("Student ID (ex. 18-00035)")
         name = col1.text_input("Full Name")
         age = col1.number_input("Age", 1, 100, 18)
-        gender = col1.selectbox("Gender", ["MALE", "FEMALE"])
+        gender = col2.selectbox("Gender", ["MALE", "FEMALE"])
         course = col2.text_input("Course")
         year = col2.selectbox("Year Level", ["1st Year", "2nd Year", "3rd Year", "4th Year"])
-        email = col2.text_input("Email")
+       
+        email = st.text_input("Email")
+        if not email.strip():
+            st.warning("Put an email")
+        else:          
+            st.error("Not found.")
         
         if st.form_submit_button("Save Record"):
             sql = "INSERT INTO students VALUES (%s, %s, %s, %s, %s, %s, %s)"
@@ -60,13 +65,15 @@ with tab3:
             with st.form("edit_form"):
                 u_name = st.text_input("Full Name", student['full_name'])
                 u_course = st.text_input("Course", student['course'])
+                u_age = st.number_input("Age", student['age'])
+                u_email = st.text_input("Email", student['email'])
                 u_year = st.selectbox("Year", ["1st Year", "2nd Year", "3rd Year", "4th Year"], 
                                     index=["1st Year", "2nd Year", "3rd Year", "4th Year"].index(student['year_level']))
                 
                 c1, c2 = st.columns(2)
                 if c1.form_submit_button("Update"):
-                    run_query("UPDATE students SET full_name=%s, course=%s, year_level=%s WHERE student_id=%s", 
-                             (u_name, u_course, u_year, student['student_id']))
+                    run_query("UPDATE students SET full_name=%s, course=%s, year_level=%s, age=%s, email=%s WHERE student_id=%s", 
+                             (u_name, u_course, u_year, u_age, u_email, student['student_id']))
                     st.success("Updated!")
                     time.sleep(1); st.rerun()
                 
