@@ -72,7 +72,7 @@ with tab1:
             st.error("Invalid! Please use an appropriate schools' email.")
             
         elif not email.endswith("@ciccebu.edu.ph"):
-            st.warning("Please use your official school email (@cic.edu.ph).")
+            st.warning("Please use your official school email (@ciccebu.edu.ph).")
             
         else:
             
